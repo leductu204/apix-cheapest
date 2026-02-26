@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import { 
-    processApiError,
-    parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+    callTramsangtaoService
 } from './baseService';
 
 interface PhotoRestorationOptions {
@@ -21,9 +18,6 @@ interface PhotoRestorationOptions {
 }
 
 export async function restoreOldPhoto(imageDataUrl: string, options: PhotoRestorationOptions): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const imagePart = { inlineData: { mimeType, data: base64Data } };
-
     const promptParts = [
         'Bạn là một chuyên gia phục chế ảnh cũ. Nhiệm vụ của bạn là phục chế bức ảnh được cung cấp.',
         '**HƯỚNG DẪN QUAN TRỌNG NHẤT:**'
@@ -76,15 +70,12 @@ export async function restoreOldPhoto(imageDataUrl: string, options: PhotoRestor
     promptParts.push('', 'Chỉ trả về hình ảnh đã được phục chế, không kèm theo văn bản giải thích.');
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
 
     try {
-        console.log("Attempting to restore old photo with new stronger prompt...");
-        const response = await callGeminiWithRetry([imagePart, textPart]);
-        return processGeminiResponse(response);
+        console.log("Attempting to restore old photo via TramSangTao...");
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: options.aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during photo restoration:", processedError);
-        throw processedError;
+        console.error("Error during photo restoration:", error);
+        throw error;
     }
 }

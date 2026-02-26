@@ -17,8 +17,11 @@ import {
     LayerComposerIcon, 
     EllipsisIcon,
     HistoryIcon,
-    StoryboardIcon
+    StoryboardIcon,
+    SettingsIcon,
+    CloseIcon
 } from './icons';
+import toast from 'react-hot-toast';
 
 const AppToolbar: React.FC = () => {
     const {
@@ -45,6 +48,17 @@ const AppToolbar: React.FC = () => {
     } = useAppControls();
 
     const { openEmptyImageEditor, imageToEdit } = useImageEditor();
+
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [tstKey, setTstKey] = useState(() => localStorage.getItem('tramsangtao_api_key') || '');
+    const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+
+    const saveSettings = () => {
+        localStorage.setItem('tramsangtao_api_key', tstKey);
+        localStorage.setItem('gemini_api_key', geminiKey);
+        toast.success('Đã lưu cấu hình API Key');
+        setIsSettingsOpen(false);
+    };
 
     const [activeTooltip, setActiveTooltip] = useState<{ text: string; rect: DOMRect } | null>(null);
     const tooltipTimeoutRef = useRef<number | null>(null);
@@ -140,6 +154,15 @@ const AppToolbar: React.FC = () => {
         <>
             <div className="fixed top-4 right-4 z-20 flex items-center gap-2">
                 {/* --- Group 1: Navigation & Info --- */}
+                <button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="btn-search bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 hover:text-orange-300 border border-orange-500/20"
+                    aria-label="Cài đặt API"
+                    onMouseEnter={(e) => showTooltip("Cài đặt API", e)}
+                    onMouseLeave={hideTooltip}
+                >
+                    <SettingsIcon className="h-5 w-5" strokeWidth={2} />
+                </button>
                 <button
                     onClick={handleGoHome}
                     className="btn-search"
@@ -249,6 +272,66 @@ const AppToolbar: React.FC = () => {
                 </div>
             </div>
             <ExtraTools isOpen={isExtraToolsOpen} />
+            
+            <AnimatePresence>
+                {isSettingsOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="w-full max-w-md bg-[#1c1c1e] border border-white/10 p-6 rounded-2xl shadow-xl flex flex-col gap-5"
+                        >
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-semibold text-white">⚙ Cài Đặt API Key</h3>
+                                <button onClick={() => setIsSettingsOpen(false)} className="text-white/50 hover:text-white transition-colors">
+                                    <CloseIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-white/80 mb-1">
+                                        TramSangTao API Key <span className="text-xs text-orange-400">(Bắt buộc tạo ảnh)</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={tstKey}
+                                        onChange={e => setTstKey(e.target.value)}
+                                        placeholder="sk_live_..."
+                                        className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder:text-white/30 focus:outline-none focus:border-orange-500/50 transition-colors"
+                                    />
+                                    <p className="text-xs text-white/40 mt-1">Dùng để tạo, chỉnh sửa ảnh (Kling/Nano Banana).</p>
+                                </div>
+                                
+                                <div className="h-px w-full bg-white/5" />
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/80 mb-1">
+                                        Google Gemini API Key <span className="text-xs text-blue-400">(Tùy chọn)</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={geminiKey}
+                                        onChange={e => setGeminiKey(e.target.value)}
+                                        placeholder="AIzaSy..."
+                                        className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
+                                    />
+                                    <p className="text-xs text-white/40 mt-1">Dùng để tinh chỉnh, làm mượt câu lệnh bằng LLM trước khi tạo.</p>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={saveSettings}
+                                className="w-full py-3 mt-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-medium rounded-xl transition-all shadow-lg active:scale-[0.98]"
+                            >
+                                Lưu Cấu Hình
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence>
                 {activeTooltip && (
                     <motion.div

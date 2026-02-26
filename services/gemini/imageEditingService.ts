@@ -9,7 +9,8 @@ import {
     parseDataUrl, 
     callGeminiWithRetry, 
     processGeminiResponse,
-    getTextModel
+    getTextModel,
+    callTramsangtaoService
 } from './baseService';
 
 /**
@@ -63,16 +64,9 @@ export async function editImageWithPrompt(
         }
         
         const fullPrompt = promptParts.join('\n');
-        const textPart = { text: fullPrompt };
-        
-        const config: any = {};
-        const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-        if (aspectRatio && aspectRatio !== 'Giữ nguyên' && validRatios.includes(aspectRatio)) {
-            config.imageConfig = { aspectRatio };
-        }
 
-        const response = await callGeminiWithRetry([imagePart, textPart], config);
-        return processGeminiResponse(response);
+        console.log("Editing image via TramSangTao...");
+        return await callTramsangtaoService(fullPrompt, imageDataUrl, { aspect_ratio: aspectRatio });
     } catch (error) {
         const processedError = processApiError(error);
         console.error("Error during image editing:", processedError);
@@ -87,24 +81,10 @@ export async function editImageWithPrompt(
  */
 export async function removeImageBackground(imageDataUrl: string): Promise<string> {
     try {
-        const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-        const imagePart = {
-            inlineData: { mimeType, data: base64Data },
-        };
-        
-        const prompt = [
-            '**YÊU CẦU CỰC KỲ QUAN TRỌNG:**',
-            'Xóa toàn bộ nền của hình ảnh này. Nền mới phải hoàn toàn TRONG SUỐT.',
-            'Giữ nguyên chủ thể ở tiền cảnh một cách chính xác, không làm mất chi tiết.',
-            'Trả về kết quả dưới dạng ảnh PNG có kênh alpha trong suốt.',
-            'Chỉ trả về hình ảnh đã xử lý, không kèm theo bất kỳ văn bản nào.'
-        ].join('\n');
-        
-        const textPart = { text: prompt };
+        const prompt = 'Xóa nền, nền trong suốt';
 
-        console.log("Attempting to remove image background...");
-        const response = await callGeminiWithRetry([imagePart, textPart]);
-        return processGeminiResponse(response);
+        console.log("Attempting to remove image background via TramSangTao...");
+        return await callTramsangtaoService(prompt, imageDataUrl);
     } catch (error) {
         const processedError = processApiError(error);
         console.error("Error during background removal:", processedError);
@@ -144,19 +124,9 @@ export async function generateFromMultipleImages(
         promptParts.push('Đầu ra cuối cùng chỉ được là một hình ảnh duy nhất.');
 
         const fullPrompt = promptParts.join('\n');
-        const textPart = { text: fullPrompt };
 
-        const allParts = [...imageParts, textPart];
-
-        const config: any = {};
-        const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-        if (aspectRatio && aspectRatio !== 'Giữ nguyên' && validRatios.includes(aspectRatio)) {
-            config.imageConfig = { aspectRatio: aspectRatio };
-        }
-
-        console.log("Attempting to generate image from multiple sources with config:", config);
-        const response = await callGeminiWithRetry(allParts, config);
-        return processGeminiResponse(response);
+        console.log("Attempting to generate image from multiple sources via TramSangTao...");
+        return await callTramsangtaoService(fullPrompt, imageDataUrls, { aspect_ratio: aspectRatio });
 
     } catch (error) {
         const processedError = processApiError(error);

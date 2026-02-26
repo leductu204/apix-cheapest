@@ -185,3 +185,150 @@ Prompt của người dùng: "${userPrompt}"
         return userPrompt;
     }
 }
+
+// --- TramSangTao API Integration ---
+
+const getTstKey = () => {
+    // @ts-ignore
+    const key = localStorage.getItem('tramsangtao_api_key') || import.meta.env.VITE_TRAMSANGTAO_API_KEY || '';
+    if (!key) {
+        throw new Error('Bạn chưa cấu hình TramSangTao API Key. Vui lòng vào Cài đặt (⚙️) để nhập key.');
+    }
+    return key;
+};
+
+const TST_BASE_URL = 'https://api.tramsangtao.com/v1';
+
+export async function uploadImage(imageDataUrl: string): Promise<string> {
+    const { mimeType, data } = parseDataUrl(imageDataUrl);
+    // Convert base64 to Blob
+    const byteCharacters = atob(data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    const formData = new FormData();
+    formData.append('file', blob, 'image.png');
+
+    const response = await fetch(`${TST_BASE_URL}/files/upload/kling`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getTstKey()}`
+            // Content-Type is automatically set with boundary for FormData
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Upload ảnh lên hệ thống thất bại: ${response.status} - ${err}`);
+    }
+
+    const result = await response.json();
+    return result.url || result.data?.url || result.data; 
+}
+
+export async function generateTramsangtaoImage(
+    prompt: string, 
+    opts: { img_url?: string | string[]; aspect_ratio?: string; resolution?: string } = {}
+): Promise<string> {
+    const model = getModelConfig().modelVersion === 'v3' ? 'nano-banana-pro' : 'nano-banana';
+    
+    const defaultResolution = getModelConfig().imageResolution.toLowerCase(); // '1K' -> '1k'
+    
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    formData.append('model', model);
+    formData.append('aspect_ratio', opts.aspect_ratio || '1:1');
+    formData.append('resolution', opts.resolution || defaultResolution);
+    formData.append('speed', 'fast');
+
+    if (opts.img_url) {
+        const urls = Array.isArray(opts.img_url) ? opts.img_url : [opts.img_url];
+        urls.forEach(url => formData.append('img_url', url));
+    }
+
+    const response = await fetch(`${TST_BASE_URL}/image/generate`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getTstKey()}`
+            // Removing Content-Type so fetch sets the correct multipart boundary
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Yêu cầu tạo ảnh thất bại: ${response.status} - ${err}`);
+    }
+
+    const result = await response.json();
+    // According to docs, we receive {"job_id": "xxx"}
+    const jobId = result.job_id || result.id;
+    if (!jobId) {
+        console.error("Generate API returned:", result);
+        throw new Error("Không nhận được Job ID từ server.");
+    }
+    return jobId;
+}
+
+export async function pollJobStatus(jobId: string): Promise<string> {
+    const startTime = Date.now();
+    const timeout = 15 * 60 * 1000; // 15 minutes max
+    const pollInterval = 5000; // 5 seconds
+
+    while (Date.now() - startTime < timeout) {
+        const response = await fetch(`${TST_BASE_URL}/jobs/${jobId}`, {
+            headers: {
+                'Authorization': `Bearer ${getTstKey()}`
+            }
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`Lỗi kiểm tra trạng thái: ${response.status} - ${err}`);
+        }
+
+        const result = await response.json();
+        const status = result.status?.toLowerCase();
+        
+        if (status === 'succeeded' || status === 'completed') {
+            const url = result.output?.[0]?.url || result.url || result.data?.image_url || result.data?.url || result.image_url || result.result;
+            if (!url) {
+                console.error("Success response missing URL:", result);
+                throw new Error("Tác vụ thành công nhưng không tìm thấy URL ảnh trả về.");
+            }
+            return url;
+        } else if (status === 'failed') {
+            throw new Error(`Tác vụ thất bại: ${JSON.stringify(result.error || result.message)}`);
+        }
+
+        // Delay before the next poll
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+
+    throw new Error('Tác vụ vượt quá thời gian chờ (15 phút)');
+}
+
+export async function callTramsangtaoService(
+    prompt: string, 
+    imageDataUrl?: string | string[],
+    opts?: { aspect_ratio?: string; resolution?: string }
+): Promise<string> {
+    let inputImageUrls: string[] | undefined = undefined;
+    
+    // For Image-to-Image tasks, first we upload the kling image blobs
+    if (imageDataUrl) {
+        const dataUrls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
+        inputImageUrls = await Promise.all(dataUrls.map(url => uploadImage(url)));
+    }
+
+    // Call the create API to get jobId
+    const jobId = await generateTramsangtaoImage(prompt, { img_url: inputImageUrls, ...opts });
+    
+    // Poll the status to wait for completion
+    return await pollJobStatus(jobId);
+}

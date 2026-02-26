@@ -6,8 +6,7 @@ import ai from './client';
 import {
     processApiError,
     parseDataUrl,
-    callGeminiWithRetry,
-    processGeminiResponse
+    callTramsangtaoService
 } from './baseService';
 
 /**
@@ -88,6 +87,7 @@ async function analyzeBabyConceptImage(styleImageDataUrl: string): Promise<strin
  * @param customPrompt Optional additional instructions for modification.
  * @param removeWatermark Optional boolean to request watermark removal.
  * @param aspectRatio Optional target aspect ratio.
+ * @param options Optional additional instructions and settings.
  * @param styleReferenceImageDataUrl Optional data URL for a style reference image, which overrides the 'idea'.
  * @returns A promise that resolves to a base64-encoded image data URL of the generated image.
  */
@@ -99,50 +99,17 @@ export async function generateBabyPhoto(
     aspectRatio?: string,
     styleReferenceImageDataUrl?: string | null
 ): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const imagePart = { inlineData: { mimeType, data: base64Data } };
-
     let finalIdea = idea;
     if (styleReferenceImageDataUrl) {
         finalIdea = await analyzeBabyConceptImage(styleReferenceImageDataUrl);
     }
 
-    const config: any = {};
-    const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-    if (aspectRatio && aspectRatio !== 'Giữ nguyên' && validRatios.includes(aspectRatio)) {
-        config.imageConfig = { aspectRatio };
-    }
-
     try {
-        console.log("Attempting baby photo generation with primary prompt...");
+        console.log("Attempting baby photo generation via TramSangTao...");
         const prompt = getPrimaryPrompt(finalIdea, customPrompt, removeWatermark, aspectRatio);
-        const textPart = { text: prompt };
-        const response = await callGeminiWithRetry([imagePart, textPart], config);
-        return processGeminiResponse(response);
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        const errorMessage = processedError.message;
-        
-        if (errorMessage.includes("API key not valid") || errorMessage.includes("Ứng dụng tạm thời")) {
-            throw processedError;
-        }
-        const isNoImageError = errorMessage.includes("The AI model responded with text instead of an image");
-
-        if (isNoImageError) {
-            console.warn(`Primary prompt was likely blocked for idea: ${finalIdea}. Trying a fallback prompt.`);
-            try {
-                const fallbackPrompt = getFallbackPrompt(finalIdea, customPrompt, removeWatermark, aspectRatio);
-                const fallbackTextPart = { text: fallbackPrompt };
-                const fallbackResponse = await callGeminiWithRetry([imagePart, fallbackTextPart], config);
-                return processGeminiResponse(fallbackResponse);
-            } catch (fallbackError) {
-                console.error("Fallback prompt also failed.", fallbackError);
-                const processedFallbackError = processApiError(fallbackError);
-                throw new Error(`The AI model failed with both primary and fallback prompts. Last error: ${processedFallbackError.message}`);
-            }
-        } else {
-            console.error("Error during baby photo generation:", processedError);
-            throw processedError;
-        }
+        console.error("Error during baby photo generation:", error);
+        throw error;
     }
 }

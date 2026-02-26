@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 body {
   font-family: 'Be Vietnam Pro', cursive;
   transition: background-color 0.5s ease;

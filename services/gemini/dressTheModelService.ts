@@ -5,8 +5,8 @@
 import { 
     processApiError, 
     parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+    callTramsangtaoService,
+    uploadImage
 } from './baseService';
 
 interface DressModelOptions {
@@ -30,12 +30,6 @@ export async function generateDressedModelImage(
     clothingImageDataUrl: string, 
     options: DressModelOptions
 ): Promise<string> {
-    const { mimeType: modelMime, data: modelData } = parseDataUrl(modelImageDataUrl);
-    const { mimeType: clothingMime, data: clothingData } = parseDataUrl(clothingImageDataUrl);
-
-    const modelImagePart = { inlineData: { mimeType: modelMime, data: modelData } };
-    const clothingImagePart = { inlineData: { mimeType: clothingMime, data: clothingData } };
-
     const promptParts = [];
 
     if (options.aspectRatio && options.aspectRatio !== 'Giữ nguyên') {
@@ -89,21 +83,13 @@ export async function generateDressedModelImage(
     }
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
-
-    const config: any = {};
-    const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-    if (options.aspectRatio && options.aspectRatio !== 'Giữ nguyên' && validRatios.includes(options.aspectRatio)) {
-        config.imageConfig = { aspectRatio: options.aspectRatio };
-    }
 
     try {
-        console.log("Attempting to generate dressed model image with dynamic prompt...");
-        const response = await callGeminiWithRetry([clothingImagePart, modelImagePart, textPart], config);
-        return processGeminiResponse(response);
+        console.log("Attempting to generate dressed model image via TramSangTao...");
+        
+        return await callTramsangtaoService(prompt, [clothingImageDataUrl, modelImageDataUrl], { aspect_ratio: options.aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during dressed model image generation:", processedError);
-        throw processedError;
+        console.error("Error during dressed model image generation:", error);
+        throw error;
     }
 }

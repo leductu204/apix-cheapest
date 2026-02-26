@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import { 
-    processApiError, 
-    parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+    callTramsangtaoService
 } from './baseService';
 
 export interface ToyModelOptions {
@@ -248,9 +245,6 @@ export async function generateToyModelImage(
     concept: string, 
     options: ToyModelOptions
 ): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const imagePart = { inlineData: { mimeType, data: base64Data } };
-
     let promptParts: string[];
 
     switch (concept) {
@@ -291,21 +285,12 @@ export async function generateToyModelImage(
     );
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
-
-    const config: any = {};
-    const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-    if (options.aspectRatio && options.aspectRatio !== 'Giữ nguyên' && validRatios.includes(options.aspectRatio)) {
-        config.imageConfig = { aspectRatio: options.aspectRatio };
-    }
 
     try {
-        console.log(`Attempting to generate toy model image for concept [${concept}] with prompt...`, prompt);
-        const response = await callGeminiWithRetry([imagePart, textPart], config);
-        return processGeminiResponse(response);
+        console.log(`Attempting to generate toy model image for concept [${concept}] via TramSangTao...`, prompt);
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: options.aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during toy model image generation:", processedError);
-        throw processedError;
+        console.error("Error during toy model image generation:", error);
+        throw error;
     }
 }

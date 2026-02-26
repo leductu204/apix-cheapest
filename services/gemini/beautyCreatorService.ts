@@ -7,8 +7,7 @@ import ai from './client';
 import {
     processApiError,
     parseDataUrl,
-    callGeminiWithRetry,
-    processGeminiResponse
+    callTramsangtaoService
 } from './baseService';
 
 interface BeautyOptions {
@@ -109,10 +108,6 @@ export async function generateBeautyImage(
     options: BeautyOptions,
     styleReferenceImageDataUrl?: string | null
 ): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const portraitImagePart = { inlineData: { mimeType, data: base64Data } };
-
-    const requestParts: object[] = [portraitImagePart];
     const promptParts: string[] = [];
     
     let finalIdea = idea;
@@ -153,21 +148,12 @@ export async function generateBeautyImage(
     );
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
-    requestParts.push(textPart);
-
-    const config: any = {};
-    const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-    if (options.aspectRatio && options.aspectRatio !== 'Giữ nguyên' && validRatios.includes(options.aspectRatio)) {
-        config.imageConfig = { aspectRatio: options.aspectRatio };
-    }
 
     try {
-        const response = await callGeminiWithRetry(requestParts, config);
-        return processGeminiResponse(response);
+        console.log("Attempting beauty image generation via TramSangTao...");
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: options.aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during beauty image generation:", processedError);
-        throw processedError;
+        console.error("Error during beauty image generation:", error);
+        throw error;
     }
 }

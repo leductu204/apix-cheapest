@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import ai from './client'; // Import the shared client instance
-import { 
-    processApiError,
-    parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+import {
+    parseDataUrl,
+    callTramsangtaoService
 } from './baseService';
 
 interface MixStyleOptions {
@@ -80,17 +78,14 @@ export async function mixImageStyle(contentImageDataUrl: string, styleImageDataU
         promptParts.push('Chỉ trả về hình ảnh kết quả cuối cùng, không kèm theo văn bản giải thích.');
 
         const finalPrompt = promptParts.join('\n');
-        const textPart = { text: finalPrompt };
         console.log("Step 2: Constructed final prompt for image generation:", finalPrompt);
 
-        // This call uses the vision model `gemini-2.5-flash-image-preview`
-        const response = await callGeminiWithRetry([contentImagePart, textPart]);
-        const resultUrl = processGeminiResponse(response);
+        console.log("Attempting style mix via TramSangTao...");
+        const resultUrl = await callTramsangtaoService(finalPrompt, contentImageDataUrl, { aspect_ratio: options.aspectRatio });
         return { resultUrl, finalPrompt };
 
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during style mix:", processedError);
-        throw processedError;
+        console.error("Error during style mix:", error);
+        throw error;
     }
 }

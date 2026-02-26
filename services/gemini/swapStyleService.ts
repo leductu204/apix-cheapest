@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import { 
-    processApiError,
-    parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+    callTramsangtaoService
 } from './baseService';
 
 interface SwapStyleOptions {
@@ -18,9 +15,6 @@ interface SwapStyleOptions {
 }
 
 async function convertImageToRealistic(imageDataUrl: string, options: SwapStyleOptions): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const imagePart = { inlineData: { mimeType, data: base64Data } };
-
     const promptParts = [
         'Nhiệm vụ của bạn là chuyển đổi hình ảnh được cung cấp thành một bức ảnh SIÊU THỰC (hyper-realistic), chi tiết và sống động như thật. Kết quả cuối cùng phải không thể phân biệt được với một bức ảnh được chụp bằng máy ảnh DSLR cao cấp.',
         '**YÊU CẦU BẮT BUỘC:**'
@@ -57,15 +51,13 @@ async function convertImageToRealistic(imageDataUrl: string, options: SwapStyleO
     promptParts.push('Chỉ trả về hình ảnh đã được chuyển đổi, không kèm theo văn bản giải thích.');
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
 
     try {
-        const response = await callGeminiWithRetry([imagePart, textPart]);
-        return processGeminiResponse(response);
+        console.log("Attempting to convert image to realistic via TramSangTao...");
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: options.aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during image to real conversion:", processedError);
-        throw processedError;
+        console.error("Error during image to real conversion:", error);
+        throw error;
     }
 }
 
@@ -74,9 +66,6 @@ export async function swapImageStyle(imageDataUrl: string, options: SwapStyleOpt
     if (options.convertToReal) {
         return convertImageToRealistic(imageDataUrl, options);
     }
-
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const imagePart = { inlineData: { mimeType, data: base64Data } };
 
     const promptParts = [
         'Nhiệm vụ của bạn là một nghệ sĩ bậc thầy, biến đổi hình ảnh được cung cấp theo một phong cách nghệ thuật cụ thể.',
@@ -114,15 +103,12 @@ export async function swapImageStyle(imageDataUrl: string, options: SwapStyleOpt
     promptParts.push('Chỉ trả về hình ảnh đã được chuyển đổi, không kèm theo văn bản giải thích.');
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
 
     try {
-        console.log("Attempting to swap image style...");
-        const response = await callGeminiWithRetry([imagePart, textPart]);
-        return processGeminiResponse(response);
+        console.log("Attempting to swap image style via TramSangTao...");
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: options.aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during style swap:", processedError);
-        throw processedError;
+        console.error("Error during style swap:", error);
+        throw error;
     }
 }

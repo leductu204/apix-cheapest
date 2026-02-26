@@ -7,8 +7,7 @@ import ai from './client';
 import { 
     processApiError, 
     parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+    callTramsangtaoService
 } from './baseService';
 
 /**
@@ -87,64 +86,19 @@ export async function generatePatrioticImage(
     aspectRatio?: string,
     styleReferenceImageDataUrl?: string | null
 ): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-
-    const imagePart = {
-        inlineData: { mimeType, data: base64Data },
-    };
-
+    // For TramSangTao, we just use the primary prompt
     let finalIdea = idea;
     if (styleReferenceImageDataUrl) {
         finalIdea = await analyzePatrioticConceptImage(styleReferenceImageDataUrl);
     }
 
-    const config: any = {};
-    const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-    if (aspectRatio && aspectRatio !== 'Giữ nguyên' && validRatios.includes(aspectRatio)) {
-        config.imageConfig = { aspectRatio };
-    }
-
-    // --- First attempt with the original prompt ---
     try {
-        console.log("Attempting generation with original prompt...");
+        console.log("Attempting generation via TramSangTao...");
         const prompt = getPrimaryPrompt(finalIdea, customPrompt, removeWatermark, aspectRatio);
-        const textPart = { text: prompt };
-        const response = await callGeminiWithRetry([imagePart, textPart], config);
-        return processGeminiResponse(response);
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        const errorMessage = processedError.message;
-        
-        if (errorMessage.includes("API key not valid") || errorMessage.includes("Ứng dụng tạm thời")) {
-            throw processedError;
-        }
-
-        const isNoImageError = errorMessage.includes("The AI model responded with text instead of an image");
-
-        if (isNoImageError) {
-            console.warn(`Original prompt was likely blocked for idea: ${finalIdea}. Trying a fallback prompt.`);
-            
-            // --- Second attempt with the fallback prompt ---
-            try {
-                const fallbackPrompt = getFallbackPrompt(finalIdea, customPrompt, removeWatermark, aspectRatio);
-                console.log(`Attempting generation with fallback prompt for ${finalIdea}...`);
-                const fallbackTextPart = { text: fallbackPrompt };
-                const fallbackResponse = await callGeminiWithRetry([imagePart, fallbackTextPart], config);
-                return processGeminiResponse(fallbackResponse);
-            } catch (fallbackError) {
-                console.error("Fallback prompt also failed.", fallbackError);
-                const processedFallbackError = processApiError(fallbackError);
-                if (processedFallbackError.message.includes("API key not valid")) {
-                   throw processedFallbackError;
-                }
-                const finalErrorMessage = processedFallbackError.message;
-                throw new Error(`The AI model failed with both original and fallback prompts. Last error: ${finalErrorMessage}`);
-            }
-        } else {
-            // This is for other errors, like a final internal server error after retries.
-            console.error("Error during image generation:", processedError);
-            throw new Error(`The AI model failed to generate an image. Details: ${errorMessage}`);
-        }
+        console.error("Error during image generation:", error);
+        throw error;
     }
 }
 

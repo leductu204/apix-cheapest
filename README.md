@@ -3,6 +3,8 @@
 </div>
 
 # Run and deploy your AI Studio app
+Many thanks to SDVN team VN - https://github.com/sdvn-team-vn
+Apix + API config tramsangtao.com (Original project: https://github.com/sdvn-team-vn/sdvn-apix)
 
 This contains everything you need to run your app locally.
 

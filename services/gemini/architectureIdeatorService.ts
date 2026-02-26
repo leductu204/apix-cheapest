@@ -5,10 +5,9 @@
 import ai from './client';
 import { 
     processApiError,
-    parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse,
-    getTextModel
+    parseDataUrl,
+    getTextModel,
+    callTramsangtaoService
 } from './baseService';
 
 interface ArchitectureOptions {
@@ -61,13 +60,6 @@ export async function generateArchitecturalImage(
     options: ArchitectureOptions,
     styleReferenceImageDataUrl?: string | null
 ): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-
-    const sketchImagePart = {
-        inlineData: { mimeType, data: base64Data },
-    };
-    
-    const requestParts: object[] = [sketchImagePart];
     const promptParts: string[] = [];
 
     if (styleReferenceImageDataUrl) {
@@ -128,17 +120,13 @@ export async function generateArchitecturalImage(
     );
 
     const prompt = promptParts.join('\n');
-    const textPart = { text: prompt };
-    requestParts.push(textPart);
 
     try {
-        console.log("Attempting to generate architectural image with dynamic prompt...");
-        const response = await callGeminiWithRetry(requestParts);
-        return processGeminiResponse(response);
+        console.log("Attempting to generate architectural image via TramSangTao...");
+        return await callTramsangtaoService(prompt, imageDataUrl);
     } catch (error) {
-        const processedError = processApiError(error);
-        console.error("Error during architectural image generation:", processedError);
-        throw processedError;
+        console.error("Error during architectural image generation:", error);
+        throw error;
     }
 }
 

@@ -5,10 +5,8 @@
 import { Type } from "@google/genai";
 import ai from './client';
 import { 
-    processApiError, 
-    parseDataUrl, 
-    callGeminiWithRetry, 
-    processGeminiResponse 
+    parseDataUrl,
+    callTramsangtaoService
 } from './baseService';
 
 function getPrimaryPrompt(idea: string, customPrompt?: string, removeWatermark?: boolean, aspectRatio?: string): string {
@@ -57,52 +55,18 @@ export async function generateMidAutumnImage(
     aspectRatio?: string,
     styleReferenceImageDataUrl?: string | null
 ): Promise<string> {
-    const { mimeType, data: base64Data } = parseDataUrl(imageDataUrl);
-    const imagePart = { inlineData: { mimeType, data: base64Data } };
-
     let finalIdea = idea;
     if (styleReferenceImageDataUrl) {
         finalIdea = await analyzeMidAutumnConceptImage(styleReferenceImageDataUrl);
     }
 
-    const config: any = {};
-    const validRatios = ['1:1', '3:4', '4:3', '9:16', '16:9', '2:3', '4:5', '3:2', '5:4', '21:9'];
-    if (aspectRatio && aspectRatio !== 'Giữ nguyên' && validRatios.includes(aspectRatio)) {
-        config.imageConfig = { aspectRatio };
-    }
-
     try {
-        console.log("Attempting Mid-Autumn image generation with primary prompt...");
+        console.log("Attempting Mid-Autumn image generation via TramSangTao...");
         const prompt = getPrimaryPrompt(finalIdea, customPrompt, removeWatermark, aspectRatio);
-        const textPart = { text: prompt };
-        const response = await callGeminiWithRetry([imagePart, textPart], config);
-        return processGeminiResponse(response);
+        return await callTramsangtaoService(prompt, imageDataUrl, { aspect_ratio: aspectRatio });
     } catch (error) {
-        const processedError = processApiError(error);
-        const errorMessage = processedError.message;
-        
-        if (errorMessage.includes("API key not valid") || errorMessage.includes("Ứng dụng tạm thời")) {
-            throw processedError;
-        }
-
-        const isNoImageError = errorMessage.includes("The AI model responded with text instead of an image");
-
-        if (isNoImageError) {
-            console.warn(`Primary prompt was likely blocked for idea: ${finalIdea}. Trying a fallback prompt.`);
-            try {
-                const fallbackPrompt = getFallbackPrompt(finalIdea, customPrompt, removeWatermark, aspectRatio);
-                const fallbackTextPart = { text: fallbackPrompt };
-                const fallbackResponse = await callGeminiWithRetry([imagePart, fallbackTextPart], config);
-                return processGeminiResponse(fallbackResponse);
-            } catch (fallbackError) {
-                console.error("Fallback prompt also failed.", fallbackError);
-                const processedFallbackError = processApiError(fallbackError);
-                throw new Error(`The AI model failed with both primary and fallback prompts. Last error: ${processedFallbackError.message}`);
-            }
-        } else {
-            console.error("Error during Mid-Autumn image generation:", processedError);
-            throw processedError;
-        }
+        console.error("Error during Mid-Autumn image generation:", error);
+        throw error;
     }
 }
 
