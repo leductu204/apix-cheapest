@@ -12,6 +12,7 @@ interface MixStyleOptions {
     styleStrength: string;
     notes?: string;
     removeWatermark?: boolean;
+    aspectRatio?: string;
 }
 
 /**

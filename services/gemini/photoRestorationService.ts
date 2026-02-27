@@ -15,6 +15,7 @@ interface PhotoRestorationOptions {
     removeWatermark?: boolean;
     removeStains?: boolean;
     colorizeRgb?: boolean;
+    aspectRatio?: string;
 }
 
 export async function restoreOldPhoto(imageDataUrl: string, options: PhotoRestorationOptions): Promise<string> {

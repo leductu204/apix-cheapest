@@ -10,6 +10,7 @@ interface ImageToRealOptions {
     faithfulness: string;
     notes?: string;
     removeWatermark?: boolean;
+    aspectRatio?: string;
 }
 
 export async function convertImageToRealistic(imageDataUrl: string, options: ImageToRealOptions): Promise<string> {

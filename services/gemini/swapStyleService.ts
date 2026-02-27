@@ -12,6 +12,7 @@ interface SwapStyleOptions {
     notes?: string;
     removeWatermark?: boolean;
     convertToReal?: boolean;
+    aspectRatio?: string;
 }
 
 async function convertImageToRealistic(imageDataUrl: string, options: SwapStyleOptions): Promise<string> {

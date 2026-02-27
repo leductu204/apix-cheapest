@@ -293,7 +293,7 @@ const ToyModelCreator: React.FC<ToyModelCreatorProps> = (props) => {
                                     className="form-input !py-2 !text-sm max-w-xs"
                                     aria-label="Chọn concept mô hình"
                                 >
-                                    {Object.entries(CONCEPTS_DATA).map(([key, value]) => (
+                                    {Object.entries(CONCEPTS_DATA).map(([key, value]: [string, any]) => (
                                         <option key={key} value={key}>{value.name}</option>
                                     ))}
                                 </select>
