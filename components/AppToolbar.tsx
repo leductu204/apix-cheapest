@@ -86,6 +86,35 @@ const AppToolbar: React.FC = () => {
         });
     }, [openEmptyImageEditor, addImagesToGallery]);
 
+    // Welcome notification
+    useEffect(() => {
+        const hasShownWelcome = sessionStorage.getItem('hasShownWelcome');
+        if (!hasShownWelcome) {
+            toast((t) => (
+                <div className="flex flex-col gap-2">
+                    <span className="font-semibold text-sm">Cộng đồng AI Art Việt Nam X TramSangTao</span>
+                    <span className="text-sm">Vui lòng cung cấp API Key để lưu cấu hình sử dụng các chức năng tự động.</span>
+                    <button 
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            setIsSettingsOpen(true);
+                        }}
+                        className="btn btn-primary mt-2 text-xs py-1.5"
+                    >
+                        Mở Cài Đặt (Cấu Hình API Key)
+                    </button>
+                    <button 
+                        onClick={() => toast.dismiss(t.id)}
+                        className="btn btn-secondary text-xs py-1"
+                    >
+                        Bỏ qua
+                    </button>
+                </div>
+            ), { duration: 10000, position: 'top-center' });
+            sessionStorage.setItem('hasShownWelcome', 'true');
+        }
+    }, [setIsSettingsOpen]);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
