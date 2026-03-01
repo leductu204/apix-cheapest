@@ -21,7 +21,7 @@ const LoginScreen: React.FC = () => {
 
         const success = await login(username, password);
         if (!success) {
-            setError(t('login_error'));
+            setError(t('login_error') !== 'login_error' ? t('login_error') : 'Tên đăng nhập hoặc mật khẩu không đúng.');
             setIsLoading(false);
         }
         // On success, the App component will re-render, no need to do anything else here.
@@ -42,12 +42,12 @@ const LoginScreen: React.FC = () => {
                 >
                     <div className="text-center mb-6">
                         <h1 className="text-5xl title-font font-bold text-white">aPix</h1>
-                        <p className="sub-title-font font-bold text-neutral-300 mt-1">{t('login_title')}</p>
+                        <p className="sub-title-font font-bold text-neutral-300 mt-1">{t('login_title') !== 'login_title' ? t('login_title') : 'Vui lòng đăng nhập'}</p>
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-neutral-300 mb-1">{t('login_username')}</label>
+                            <label htmlFor="username" className="block text-sm font-medium text-neutral-300 mb-1">{t('login_username') !== 'login_username' ? t('login_username') : 'Tên đăng nhập'}</label>
                             <input
                                 id="username"
                                 type="text"
@@ -59,7 +59,7 @@ const LoginScreen: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label htmlFor="password"  className="block text-sm font-medium text-neutral-300 mb-1">{t('login_password')}</label>
+                            <label htmlFor="password"  className="block text-sm font-medium text-neutral-300 mb-1">{t('login_password') !== 'login_password' ? t('login_password') : 'Mật khẩu'}</label>
                             <input
                                 id="password"
                                 type="password"
@@ -88,7 +88,7 @@ const LoginScreen: React.FC = () => {
                             className="btn btn-primary w-full"
                             disabled={isLoading}
                         >
-                            {isLoading ? t('login_loading') : t('login_submit')}
+                            {isLoading ? (t('login_loading') !== 'login_loading' ? t('login_loading') : 'Đang xử lý...') : (t('login_submit') !== 'login_submit' ? t('login_submit') : 'Đăng nhập')}
                         </button>
                     </div>
                 </form>
