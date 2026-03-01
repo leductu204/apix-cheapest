@@ -89,28 +89,42 @@ const AppToolbar: React.FC = () => {
     // Welcome notification
     useEffect(() => {
         const hasShownWelcome = sessionStorage.getItem('hasShownWelcome');
-        if (!hasShownWelcome) {
+        const currentTstKey = localStorage.getItem('tramsangtao_api_key');
+        if (!hasShownWelcome || !currentTstKey) {
             toast((t) => (
-                <div className="flex flex-col gap-2">
-                    <span className="font-semibold text-sm">Cộng đồng AI Art Việt Nam X TramSangTao</span>
-                    <span className="text-sm">Vui lòng cung cấp API Key để lưu cấu hình sử dụng các chức năng tự động.</span>
+                <div className="flex flex-col gap-3 p-2">
+                    <span className="font-semibold text-base text-center">Cộng đồng AI Art Việt Nam X TramSangTao</span>
+                    <span className="text-sm text-center text-white/80">Vui lòng cung cấp API Key để lưu cấu hình<br/>sử dụng các chức năng tự động.</span>
                     <button 
                         onClick={() => {
                             toast.dismiss(t.id);
                             setIsSettingsOpen(true);
                         }}
-                        className="btn btn-primary mt-2 text-xs py-1.5"
+                        className="btn btn-primary mt-2 text-sm py-2 rounded-xl"
                     >
                         Mở Cài Đặt (Cấu Hình API Key)
                     </button>
                     <button 
                         onClick={() => toast.dismiss(t.id)}
-                        className="btn btn-secondary text-xs py-1"
+                        className="btn btn-secondary text-sm py-2 rounded-xl"
                     >
                         Bỏ qua
                     </button>
                 </div>
-            ), { duration: 10000, position: 'top-center' });
+            ), { 
+                duration: 20000, 
+                position: 'top-center',
+                style: {
+                    marginTop: '35vh',
+                    borderRadius: '1.25rem',
+                    padding: '16px',
+                    maxWidth: '400px',
+                    width: '90%',
+                    backgroundColor: '#1c1c1e',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                }
+            });
             sessionStorage.setItem('hasShownWelcome', 'true');
         }
     }, [setIsSettingsOpen]);
@@ -320,9 +334,14 @@ const AppToolbar: React.FC = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/80 mb-1">
-                                        TramSangTao API Key <span className="text-xs text-orange-400">(Bắt buộc tạo ảnh)</span>
-                                    </label>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-sm font-medium text-white/80">
+                                            TramSangTao API Key <span className="text-xs text-orange-400">(Bắt buộc tạo ảnh)</span>
+                                        </label>
+                                        <a href="https://tramsangtao.com/docs" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                                            Tạo API Key
+                                        </a>
+                                    </div>
                                     <input
                                         type="password"
                                         value={tstKey}
