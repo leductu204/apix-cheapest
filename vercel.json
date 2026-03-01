@@ -5,7 +5,7 @@
       "destination": "https://api.tramsangtao.com/:match*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|locales/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
