@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const initializeAuth = async () => {
             const defaultSettingsOnError: LoginSettings = {
-                enabled: true,
+                enabled: false,
                 accounts: [
                     { username: "aPix", password: "sdvn" },
                     { username: "guest", password: "123" }
