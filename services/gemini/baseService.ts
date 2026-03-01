@@ -199,7 +199,7 @@ const getTstKey = () => {
 
 const TST_BASE_URL = '/tst-api/v1';
 
-export async function uploadImage(imageDataUrl: string): Promise<string> {
+export async function uploadImage(imageDataUrl: string, filename: string = 'image.png'): Promise<string> {
     const { mimeType, data } = parseDataUrl(imageDataUrl);
     // Convert base64 to Blob
     const byteCharacters = atob(data);
@@ -211,7 +211,7 @@ export async function uploadImage(imageDataUrl: string): Promise<string> {
     const blob = new Blob([byteArray], { type: mimeType });
 
     const formData = new FormData();
-    formData.append('file', blob, 'image.png');
+    formData.append('file', blob, filename);
 
     const response = await fetch(`${TST_BASE_URL}/files/upload/kling`, {
         method: 'POST',
@@ -325,14 +325,16 @@ export async function pollJobStatus(jobId: string): Promise<string> {
 export async function callTramsangtaoService(
     prompt: string, 
     imageDataUrl?: string | string[],
-    opts?: { aspect_ratio?: string; resolution?: string }
+    opts?: { aspect_ratio?: string; resolution?: string; filenames?: string[] }
 ): Promise<string> {
     let inputImageUrls: string[] | undefined = undefined;
     
     // For Image-to-Image tasks, first we upload the kling image blobs
     if (imageDataUrl) {
         const dataUrls = Array.isArray(imageDataUrl) ? imageDataUrl : [imageDataUrl];
-        inputImageUrls = await Promise.all(dataUrls.map(url => uploadImage(url)));
+        inputImageUrls = await Promise.all(
+            dataUrls.map((url, i) => uploadImage(url, opts?.filenames?.[i]))
+        );
     }
 
     // Call the create API to get jobId
