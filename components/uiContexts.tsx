@@ -216,7 +216,7 @@ export const AppControlProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [translations, setTranslations] = useState<Record<string, any>>({});
     const [settings, setSettings] = useState<Settings | null>(null);
     
-    const [modelVersion, setModelVersion] = useState<ModelVersion>('v2');
+    const [modelVersion, setModelVersion] = useState<ModelVersion>('v3');
     const [imageResolution, setImageResolution] = useState<ImageResolution>('1K');
 
     const currentView = viewHistory[historyIndex];
