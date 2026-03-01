@@ -250,7 +250,14 @@ export const AppControlProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                                 console.warn(`Could not fetch ${module}.json for ${language}`);
                                 return {}; // Return empty object on failure to not break Promise.all
                             }
-                            return res.json();
+                            return res.json().catch((err) => {
+                                console.warn(`Error parsing ${module}.json for ${language}:`, err);
+                                return {};
+                            });
+                        })
+                        .catch((err) => {
+                            console.warn(`Network error fetching ${module}.json for ${language}:`, err);
+                            return {};
                         })
                 );
 
