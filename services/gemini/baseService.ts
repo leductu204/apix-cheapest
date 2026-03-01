@@ -197,7 +197,7 @@ const getTstKey = () => {
     return key;
 };
 
-const TST_BASE_URL = 'https://api.tramsangtao.com/v1';
+const TST_BASE_URL = '/tst-api/v1';
 
 export async function uploadImage(imageDataUrl: string): Promise<string> {
     const { mimeType, data } = parseDataUrl(imageDataUrl);
@@ -242,8 +242,17 @@ export async function generateTramsangtaoImage(
     const formData = new FormData();
     formData.append('prompt', prompt);
     formData.append('model', model);
-    formData.append('aspect_ratio', opts.aspect_ratio || '1:1');
-    formData.append('resolution', opts.resolution || defaultResolution);
+    
+    let aspectRatioToSend = opts.aspect_ratio || '1:1';
+    if (aspectRatioToSend === 'Giữ nguyên' || aspectRatioToSend === 'auto') {
+        aspectRatioToSend = 'auto';
+    }
+    formData.append('aspect_ratio', aspectRatioToSend);
+
+    if (model !== 'nano-banana') {
+        formData.append('resolution', opts.resolution || defaultResolution);
+    }
+    
     formData.append('speed', 'fast');
 
     if (opts.img_url) {
