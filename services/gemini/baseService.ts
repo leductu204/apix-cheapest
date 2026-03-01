@@ -241,11 +241,16 @@ export async function uploadImage(imageDataUrl: string, filename: string = 'imag
 
     const result = await response.json();
     const url = result.url || result.data?.url || result.data;
-    const id = result.id || result.data?.id || '';
     
+    // Extract the actual filename from the end of the returned URL
     let parsedFilename = uploadFilename;
-    if (id) {
-        parsedFilename = `${id}.${ext}`;
+    if (url && typeof url === 'string') {
+        const urlParts = url.split('/');
+        const lastPart = urlParts.pop();
+        if (lastPart) {
+            // Remove any query parameters if they exist
+            parsedFilename = lastPart.split('?')[0];
+        }
     }
 
     return { url, parsedFilename };
