@@ -36,31 +36,55 @@ export const handleFileUpload = (
  * @param url The URL of the file to download (can be a data URL or blob URL).
  * @param filenameWithoutExtension The desired name for the downloaded file, without the extension.
  */
-export const downloadImage = (url: string, filenameWithoutExtension: string) => {
+export const downloadImage = async (url: string, filenameWithoutExtension: string) => {
     if (!url) return;
     toast('Bắt đầu tải về...');
 
-    // Determine extension from URL
-    let extension = 'jpg'; // Default extension
-    if (url.startsWith('data:image/png')) {
-        extension = 'png';
-    } else if (url.startsWith('data:image/jpeg')) {
-        extension = 'jpg';
-    } else if (url.startsWith('data:image/webp')) {
-        extension = 'webp';
-    } else if (url.startsWith('blob:')) {
-        // This is likely a video from video generation or a blob from another source.
-        // It's safer to assume mp4 for videos.
-        extension = 'mp4';
-    }
+    try {
+        // Fetch the image to get a blob, which forces a download instead of opening a new tab
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const blob = await response.blob();
+        
+        // Determine extension from URL or blob type
+        let extension = 'jpg'; // Default extension
+        if (blob.type === 'image/png' || url.startsWith('data:image/png')) {
+            extension = 'png';
+        } else if (blob.type === 'image/jpeg' || url.startsWith('data:image/jpeg')) {
+            extension = 'jpg';
+        } else if (blob.type === 'image/webp' || url.startsWith('data:image/webp')) {
+            extension = 'webp';
+        } else if (blob.type === 'video/mp4' || url.startsWith('blob:')) {
+            // This is likely a video from video generation or a blob from another source.
+            extension = 'mp4';
+        }
 
-    const filename = `${filenameWithoutExtension}.${extension}`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        const filename = `${filenameWithoutExtension}.${extension}`;
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Cleanup the object URL
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error) {
+        console.error('Lỗi khi tải ảnh:', error);
+        toast.error('Có lỗi xảy ra khi tải ảnh.');
+        
+        // Fallback to original behavior if fetching blob fails
+        const filename = `${filenameWithoutExtension}.jpg`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 };
 
 /**
