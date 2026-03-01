@@ -92,15 +92,15 @@ const AppToolbar: React.FC = () => {
         const currentTstKey = localStorage.getItem('tramsangtao_api_key');
         if (!hasShownWelcome || !currentTstKey) {
             toast((t) => (
-                <div className="flex flex-col gap-3 p-2">
-                    <span className="font-semibold text-base text-center">Cộng đồng AI Art Việt Nam X TramSangTao</span>
-                    <span className="text-sm text-center text-white/80">Vui lòng cung cấp API Key để lưu cấu hình<br/>sử dụng các chức năng tự động.</span>
+                <div className="flex flex-col gap-4 p-4">
+                    <span className="font-semibold text-lg text-center">Cộng đồng AI Art Việt Nam X TramSangTao</span>
+                    <span className="text-base text-center text-white/80">Vui lòng cung cấp API Key để lưu cấu hình<br/>sử dụng các chức năng tự động.</span>
                     <button 
                         onClick={() => {
                             toast.dismiss(t.id);
                             setIsSettingsOpen(true);
                         }}
-                        className="btn btn-primary mt-2 text-sm py-2 rounded-xl"
+                        className="btn btn-primary mt-2 text-base py-3 rounded-xl font-medium"
                     >
                         Mở Cài Đặt (Cấu Hình API Key)
                     </button>
@@ -117,9 +117,9 @@ const AppToolbar: React.FC = () => {
                 style: {
                     marginTop: '35vh',
                     borderRadius: '1.25rem',
-                    padding: '16px',
-                    maxWidth: '400px',
-                    width: '90%',
+                    padding: '20px',
+                    maxWidth: '500px',
+                    width: '95%',
                     backgroundColor: '#1c1c1e',
                     color: '#ffffff',
                     border: '1px solid rgba(255,255,255,0.1)'
