@@ -215,8 +215,15 @@ export async function uploadImage(imageDataUrl: string, filename: string = 'imag
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: mimeType });
 
+    // Attempt to parse extension from mimeType
+    let ext = mimeType.split('/')[1] || 'png';
+    if (ext === 'jpeg') ext = 'jpg';
+    
+    // Ensure the filename we send to the server has the correct extension
+    const uploadFilename = filename === 'image.png' ? `image.${ext}` : filename.replace(/\.[^/.]+$/, `.${ext}`);
+
     const formData = new FormData();
-    formData.append('file', blob, filename);
+    formData.append('file', blob, uploadFilename);
 
     const response = await fetch(`${TST_BASE_URL}/files/upload/kling`, {
         method: 'POST',
@@ -236,11 +243,7 @@ export async function uploadImage(imageDataUrl: string, filename: string = 'imag
     const url = result.url || result.data?.url || result.data;
     const id = result.id || result.data?.id || '';
     
-    // Attempt to parse extension from mimeType
-    let ext = mimeType.split('/')[1] || 'png';
-    if (ext === 'jpeg') ext = 'jpg';
-    
-    let parsedFilename = filename;
+    let parsedFilename = uploadFilename;
     if (id) {
         parsedFilename = `${id}.${ext}`;
     }
