@@ -40,10 +40,10 @@ export async function generateDressedModelImage(
     }
 
     promptParts.push(
-        'Tạo hình ảnh người mẫu trong file model.png mặc trang phục ở file outfit.png.',
+        'Tạo hình ảnh người mẫu trong file {filename0} mặc trang phục ở file {filename1}.',
         '**YÊU CẦU CỰC KỲ QUAN TRỌNG:**',
-        '1.  **GIỮ NGUYÊN NGƯỜI MẪU:** Phải giữ lại chính xác 100% khuôn mặt, vóc dáng, màu da của người mẫu trong file model.png. Tuyệt đối không được thay đổi người mẫu.',
-        '2.  **CHUYỂN ĐỔI TRANG PHỤC:** Lấy trang phục từ file outfit.png và mặc nó lên người mẫu một cách tự nhiên và chân thực, giữ nguyên bố cục pose dáng ban đầu. Giữ nguyên màu sắc, họa tiết và kiểu dáng của trang phục.',
+        '1.  **GIỮ NGUYÊN NGƯỜI MẪU:** Phải giữ lại chính xác 100% khuôn mặt, vóc dáng, màu da của người mẫu trong file {filename0}. Tuyệt đối không được thay đổi người mẫu.',
+        '2.  **CHUYỂN ĐỔI TRANG PHỤC:** Lấy trang phục từ file {filename1} và mặc nó lên người mẫu một cách tự nhiên và chân thực, giữ nguyên bố cục pose dáng ban đầu. Giữ nguyên màu sắc, họa tiết và kiểu dáng của trang phục.',
         '3.  **TÙY CHỈNH KẾT QUẢ:** Dựa vào các yêu cầu sau để tạo ra bức ảnh cuối cùng:'
     );
     
@@ -83,8 +83,7 @@ export async function generateDressedModelImage(
     try {
         console.log("Attempting to generate dressed model image via TramSangTao...");
         return await callTramsangtaoService(prompt, [modelImageDataUrl, clothingImageDataUrl], { 
-            aspect_ratio: options.aspectRatio,
-            filenames: ['model.png', 'outfit.png']
+            aspect_ratio: options.aspectRatio
         });
     } catch (error) {
         console.error("Error during dressed model image generation:", error);
