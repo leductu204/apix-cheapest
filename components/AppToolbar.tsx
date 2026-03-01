@@ -301,7 +301,7 @@ const AppToolbar: React.FC = () => {
                                         placeholder="sk_live_..."
                                         className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder:text-white/30 focus:outline-none focus:border-orange-500/50 transition-colors"
                                     />
-                                    <p className="text-xs text-white/40 mt-1">Dùng để tạo, chỉnh sửa ảnh (Kling/Nano Banana).</p>
+                                    <p className="text-xs text-white/40 mt-1">Dùng để tạo, chỉnh sửa ảnh (Nano Banana...)</p>
                                 </div>
                                 
                                 <div className="h-px w-full bg-white/5" />

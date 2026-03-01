@@ -1,7 +1,7 @@
 
 {
   "home_mainTitle": "aPix",
-  "home_subtitle": "Chọn ứng dụng hoặc tải lên json setting để bắt đầu",
+  "home_subtitle": "App được Remix lại sử dụng API của TramSangTao",
   "home_uploadJson": "Tải lên JSON",
   "home_openCanvas": "Canvas",
   "home_openEditor": "Image Editor",
